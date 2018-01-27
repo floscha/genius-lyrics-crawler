@@ -31,12 +31,13 @@ def scrape_popular_songs():
 def scrape_all_songs():
     for current_letter in ascii_lowercase:
         artists_generator = get_all_artists_for_letter(current_letter)
+
         while True:
             try:
                 next_artists = next(artists_generator)
             except StopIteration:
                 break
-                
+
             get_all_songs_for_artist(next_artists)
 
 
@@ -58,7 +59,7 @@ def get_popular_artists_for_letter(letter):
 
 def get_all_artists_for_letter(letter):
     url_template = 'https://genius.com/artists-index/%s/all?page=%d'
-    # This header is neccessary to not load the whole HTML page but only
+    # This header is necessary to not load the whole HTML page but only
     # the additional artists for page n.
     headers = {'x-requested-with': 'XMLHttpRequest'}
 
