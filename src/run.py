@@ -21,6 +21,7 @@ repo = db.lyrics
 
 
 def scrape_popular_songs():
+    """Scrape the songs from the Genius popular pages for all letters."""
     for current_letter in ascii_lowercase:
         artists = get_popular_artists_for_letter(current_letter)
 
@@ -29,6 +30,7 @@ def scrape_popular_songs():
 
 
 def scrape_all_songs():
+    """Scrape all songs from Genius."""
     for current_letter in ascii_lowercase:
         artists_generator = get_all_artists_for_letter(current_letter)
 
@@ -42,6 +44,7 @@ def scrape_all_songs():
 
 
 def get_popular_artists_for_letter(letter):
+    """Get all artist from Genius' popular page for the given letter."""
     url_template = 'https://genius.com/artists-index/%s'
 
     url = url_template % letter
@@ -58,6 +61,7 @@ def get_popular_artists_for_letter(letter):
 
 
 def get_all_artists_for_letter(letter):
+    """Get all artist from Genius for the given letter."""
     url_template = 'https://genius.com/artists-index/%s/all?page=%d'
     # This header is necessary to not load the whole HTML page but only
     # the additional artists for page n.
@@ -80,6 +84,7 @@ def get_all_artists_for_letter(letter):
 
 
 def _get_artist_id_from_name(artist_name):
+    """Get the Genius artist ID for the artist's name."""
     parsed_artist_name = parse_raw_string(artist_name)
     content = requests.get('https://genius.com/artists/%s'
                            % parsed_artist_name).text
@@ -92,6 +97,7 @@ def _get_artist_id_from_name(artist_name):
 
 
 def get_all_songs_for_artist(artist_name, max_page=None):
+    """Get all songs from the given artist."""
     artist_id = _get_artist_id_from_name(artist_name)
 
     url_template = 'https://genius.com/api/artists/%d/songs?page=%d'
