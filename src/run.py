@@ -20,25 +20,16 @@ db = client.mole
 repo = db.lyrics
 
 
-def scrape_popular_songs():
-    """Scrape the songs from the Genius popular pages for all letters."""
+def scrape_songs(popular_only=False):
+    """Scrape songs from Genius for all letters."""
     for current_letter in ascii_lowercase:
-        artists = get_popular_artists_for_letter(current_letter)
+        if popular_only:
+            artists = get_popular_artists_for_letter(current_letter)
+        else:
+            artists = get_all_artists_for_letter(current_letter)
 
         for current_artist in artists:
             song_generator = get_all_songs_for_artist(current_artist)
-
-            for current_song in song_generator:
-                yield current_song
-
-
-def scrape_all_songs():
-    """Scrape all songs from Genius."""
-    for current_letter in ascii_lowercase:
-        artists_generator = get_all_artists_for_letter(current_letter)
-
-        for next_artists in artists_generator:
-            song_generator = get_all_songs_for_artist(next_artists)
 
             for current_song in song_generator:
                 yield current_song
@@ -167,7 +158,7 @@ def scrape_lyrics(artist, title):
 
 
 if __name__ == '__main__':
-    songs = scrape_popular_songs()
+    songs = scrape_songs(popular_only=True)
 
     for song in songs:
         repo.insert_one(song._asdict())
