@@ -28,8 +28,8 @@ def scrape_popular_songs():
         for current_artist in artists:
             song_generator = get_all_songs_for_artist(current_artist)
 
-            for song in song_generator:
-                yield song
+            for current_song in song_generator:
+                yield current_song
 
 
 def scrape_all_songs():
@@ -40,8 +40,8 @@ def scrape_all_songs():
         for next_artists in artists_generator:
             song_generator = get_all_songs_for_artist(next_artists)
 
-            for song in song_generator:
-                yield song
+            for current_song in song_generator:
+                yield current_song
 
 
 def get_popular_artists_for_letter(letter):
@@ -167,6 +167,7 @@ def scrape_lyrics(artist, title):
 
 
 if __name__ == '__main__':
-    scrape_popular_songs()
+    songs = scrape_popular_songs()
 
-    repo.insert_one(song_obj._asdict())
+    for song in songs:
+        repo.insert_one(song._asdict())
