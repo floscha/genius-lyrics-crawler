@@ -15,7 +15,7 @@ from url_builder import parse_raw_string
 Song = namedtuple('Song', ['artist', 'title', 'text', 'language'])
 
 # Setup MongoDB connection.
-client = MongoClient('localhost', 32768)
+client = MongoClient('mongo', 27017)
 db = client.mole
 repo = db.lyrics
 
