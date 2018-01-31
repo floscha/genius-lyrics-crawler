@@ -10,4 +10,4 @@ RUN cd /app && \
 # Add actual source code.
 ADD src /app/src
 
-CMD ["python", "src/run.py"]
+CMD ["python", "src/run.py", "popular"]

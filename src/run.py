@@ -1,5 +1,6 @@
 from collections import namedtuple
 from string import ascii_lowercase
+import sys
 
 from bs4 import BeautifulSoup
 import langdetect
@@ -157,8 +158,26 @@ def scrape_lyrics(artist, title):
     return lyrics
 
 
+def print_usage():
+    print("Usage: python run.py [all | popular]")
+
+
 if __name__ == '__main__':
-    songs = scrape_songs(popular_only=True)
+    args = sys.argv[1:]
+    if len(args) != 1:
+        print_usage()
+        sys.exit(1)
+
+    popular_only_flag = args[0]
+    if popular_only_flag == 'popular':
+        popular_only = True
+    elif popular_only_flag == 'all':
+        popular_only = False
+    else:
+        print_usage()
+        sys.exit(1)
+
+    songs = scrape_songs(popular_only=popular_only)
 
     for song in songs:
         repo.insert_one(song._asdict())
