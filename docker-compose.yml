@@ -1,9 +1,22 @@
 version: '2'
 services:
-  crawler:
+  worker:
     build: .
-  database:
-    hostname: mongo
+    links:
+      - rabbitmq
+      - mongodb
+    depends_on:
+      - rabbitmq
+      - mongodb
+
+  rabbitmq:
+    image: rabbitmq:latest
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=pass
+    ports:
+      - 5672:5672
+  mongodb:
     image: mongo:latest
     environment:
       - MONGO_DATA_DIR=/data/mongodb

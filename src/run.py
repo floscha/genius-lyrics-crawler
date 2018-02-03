@@ -3,6 +3,7 @@ from string import ascii_lowercase
 import sys
 
 from bs4 import BeautifulSoup
+from celery import Celery
 import langdetect
 from langdetect.lang_detect_exception import LangDetectException
 from pymongo import MongoClient
@@ -15,8 +16,11 @@ from url_builder import parse_raw_string
 # Define Song data type.
 Song = namedtuple('Song', ['artist', 'title', 'text', 'language'])
 
+# Setup Celery with RabbitMQ as the broker.
+app = Celery('genius_lyrics_crawler', broker='amqp://user:pass@rabbitmq:5672')
+
 # Setup MongoDB connection.
-client = MongoClient('mongo', 27017)
+client = MongoClient('mongodb', 27017)
 db = client.mole
 repo = db.lyrics
 
