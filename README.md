@@ -6,7 +6,7 @@ A simple crawler to store lyrics from [Genius](http://genius.com) in MongoDB.
 - [x] Scrape all songs
 - [x] Scrape popular songs
 - [x] Simple CLI
-- [ ] Concurrent crawling
+- [x] Concurrent crawling
 - [ ] Use multiple crawler instances
 
 ## Usage

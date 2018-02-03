@@ -25,22 +25,32 @@ db = client.mole
 repo = db.lyrics
 
 
-def scrape_songs(popular_only=False):
+def scrape_songs(popular_only=False,
+                 letters=None,
+                 artists_per_letter=None,
+                 pages_per_artist=None,
+                 songs_per_page=None):
     """Scrape songs from Genius for all letters."""
-    for current_letter in ascii_lowercase:
+    print("Start scraping process...")
+
+    letters = letters or ascii_lowercase
+    for current_letter in letters:
         if popular_only:
-            artists = get_popular_artists_for_letter(current_letter)
+            scrape_popular_artists_for_letter(current_letter,
+                                              artists_per_letter,
+                                              pages_per_artist,
+                                              songs_per_page)
         else:
-            artists = get_all_artists_for_letter(current_letter)
-
-        for current_artist in artists:
-            song_generator = get_all_songs_for_artist(current_artist)
-
-            for current_song in song_generator:
-                yield current_song
+            scrape_all_artists_for_letter(current_letter,
+                                          artists_per_letter,
+                                          pages_per_artist,
+                                          songs_per_page)
 
 
-def get_popular_artists_for_letter(letter):
+def scrape_popular_artists_for_letter(letter,
+                                      artists_per_letter=None,
+                                      pages_per_artist=None,
+                                      songs_per_page=None):
     """Get all artist from Genius' popular page for the given letter."""
     url_template = 'https://genius.com/artists-index/%s'
 
@@ -54,10 +64,19 @@ def get_popular_artists_for_letter(letter):
     list_items = list_.find_all('li')
     artists = [li.a.text for li in list_items]
 
-    return artists
+    for i, artist in enumerate(artists):
+        if artists_per_letter and i >= artists_per_letter:
+            break
+
+        scrape_all_songs_for_artist(artist,
+                                    pages_per_artist,
+                                    songs_per_page)
 
 
-def get_all_artists_for_letter(letter):
+def scrape_all_artists_for_letter(letter,
+                                  artists_per_letter=None,
+                                  pages_per_artist=None,
+                                  songs_per_page=None):
     """Get all artist from Genius for the given letter."""
     url_template = 'https://genius.com/artists-index/%s/all?page=%d'
     # This header is necessary to not load the whole HTML page but only
@@ -93,7 +112,9 @@ def _get_artist_id_from_name(artist_name):
     return artist_id
 
 
-def get_all_songs_for_artist(artist_name, max_page=None):
+def scrape_all_songs_for_artist(artist_name,
+                                pages_per_artist,
+                                songs_per_page):
     """Get all songs from the given artist."""
     artist_id = _get_artist_id_from_name(artist_name)
 
@@ -110,39 +131,48 @@ def get_all_songs_for_artist(artist_name, max_page=None):
         songs = json_response['songs']
         next_page = json_response['next_page']
 
-        for song in songs:
-            artist = song['primary_artist']['name']
-            title = song['title']
-            text = scrape_lyrics(artist, title)
-            if not text:
-                continue
+        for i, song in enumerate(songs):
+            if songs_per_page and i >= songs_per_page:
+                break
 
-            # Remove structural info like [Chorus].
-            text = '\n'.join([line for line in text.split('\n')
-                              if not line.startswith('[')])
-            # Skip instrumentals that only contain [Instrumental].
-            if not text:
-                continue
+            scrape_song.delay(song)
 
-            try:
-                language = langdetect.detect(text)
-            except LangDetectException as lde:
-                print("Language could not be detected for '%s - %s':\n%s"
-                      % (artist, title, lde))
-                continue
+        if pages_per_artist and current_page > pages_per_artist:
+            break
 
-            song_obj = Song(artist, title, text, language)
+        current_page = next_page
 
-            yield song_obj
 
-        if max_page and current_page > max_page:
-            current_page = None
-        else:
-            current_page = next_page
+@app.task(bind=True, default_retry_delay=3)
+def scrape_song(self, song):
+    """Scrape a single song."""
+    artist = song['primary_artist']['name']
+    title = song['title']
+    text = scrape_lyrics(artist, title)
+    if not text:
+        return
+
+    # Remove structural info like [Chorus].
+    text = '\n'.join([line for line in text.split('\n')
+                      if not line.startswith('[')])
+    # Skip instrumentals that only contain [Instrumental].
+    if not text:
+        return
+
+    try:
+        language = langdetect.detect(text)
+    except LangDetectException as lde:
+        print("Language could not be detected for '%s - %s':\n%s"
+              % (artist, title, lde))
+        return
+
+    song_obj = Song(artist, title, text, language)
+
+    repo.insert_one(song_obj._asdict())
 
 
 def scrape_lyrics(artist, title):
-    """Scrape the lyrice for a given artist/song name."""
+    """Scrape the lyrics for a given artist/song name."""
     url = build_genius_url(artist, title)
     content = requests.get(url).text
     soup = BeautifulSoup(content, 'html5lib')
@@ -173,7 +203,14 @@ if __name__ == '__main__':
         sys.exit(1)
 
     popular_only_flag = args[0]
-    if popular_only_flag == 'popular':
+    if popular_only_flag == 'validate':
+        scrape_songs(popular_only=True,
+                     letters=list('abc'),
+                     artists_per_letter=3,
+                     pages_per_artist=1,
+                     songs_per_page=3)
+        sys.exit(0)
+    elif popular_only_flag == 'popular':
         popular_only = True
     elif popular_only_flag == 'all':
         popular_only = False
@@ -181,7 +218,4 @@ if __name__ == '__main__':
         print_usage()
         sys.exit(1)
 
-    songs = scrape_songs(popular_only=popular_only)
-
-    for song in songs:
-        repo.insert_one(song._asdict())
+    scrape_songs(popular_only=popular_only)
