@@ -1,5 +1,7 @@
 # Genius Lyrics Crawler
 
+![alt text](./temporary_logo.png)
+
 A simple crawler to store lyrics from [Genius](http://genius.com) in MongoDB.
 
 ## Features
