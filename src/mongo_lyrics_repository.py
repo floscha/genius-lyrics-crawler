@@ -21,8 +21,8 @@ class MongoLyricsRepository(object):
         generated_id = hashlib.sha256(bytes_).hexdigest()
         return generated_id
 
-    def store_raw_lyrics(self, song):
-        """Store a RawLyrics object to DB."""
+    def store_song(self, song):
+        """Store a Song object in MongoDB."""
         song_dict = song._asdict()
         song_id = MongoLyricsRepository._generate_song_id(song)
 

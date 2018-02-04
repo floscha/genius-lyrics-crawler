@@ -186,7 +186,7 @@ def scrape_song(song):
 
     song_obj = Song(artist, title, text, language)
 
-    repo.insert_one(song_obj._asdict())
+    repo.store_song(song_obj._asdict())
 
 
 def scrape_lyrics(artist, title):
