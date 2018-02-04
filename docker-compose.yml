@@ -3,6 +3,9 @@ services:
   # Genius Lyrics Crawler services
   driver:
     build: .
+    environment:
+      - RABBITMQ_USER=gavin
+      - RABBITMQ_PASS=hooli
     links:
       - rabbitmq
     depends_on:
@@ -10,6 +13,9 @@ services:
     command: python -u driver.py popular
   worker:
     build: .
+    environment:
+      - RABBITMQ_USER=gavin
+      - RABBITMQ_PASS=hooli
     links:
       - rabbitmq
       - mongodb

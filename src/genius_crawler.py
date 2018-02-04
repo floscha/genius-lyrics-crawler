@@ -1,4 +1,5 @@
 from collections import namedtuple
+import os
 from string import ascii_lowercase
 
 from bs4 import BeautifulSoup
@@ -16,6 +17,10 @@ from url_builder import parse_raw_string
 Song = namedtuple('Song', ['artist', 'title', 'text', 'language'])
 
 # Setup Celery with RabbitMQ as the broker.
+broker_user = os.getenv('RABBITMQ_USER')
+broker_pass = os.getenv('RABBITMQ_PASS')
+assert broker_pass and broker_pass, "Both 'RABBITMQ_USER' and " + \
+                                    "'RABBITMQ_PASS' have to be set in ENV"
 app = Celery('genius_lyrics_crawler',
              broker='amqp://gavin:hooli@rabbitmq:5672')
 
