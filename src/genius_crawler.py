@@ -1,6 +1,5 @@
 from collections import namedtuple
 from string import ascii_lowercase
-import sys
 
 from bs4 import BeautifulSoup
 from celery import Celery
@@ -17,7 +16,8 @@ from url_builder import parse_raw_string
 Song = namedtuple('Song', ['artist', 'title', 'text', 'language'])
 
 # Setup Celery with RabbitMQ as the broker.
-app = Celery('genius_lyrics_crawler', broker='amqp://user:pass@rabbitmq:5672')
+app = Celery('genius_lyrics_crawler',
+             broker='amqp://gavin:hooli@rabbitmq:5672')
 
 # Setup MongoDB connection.
 client = MongoClient('mongodb', 27017)
@@ -36,17 +36,22 @@ def scrape_songs(popular_only=False,
     letters = letters or ascii_lowercase
     for current_letter in letters:
         if popular_only:
-            scrape_popular_artists_for_letter(current_letter,
-                                              artists_per_letter,
-                                              pages_per_artist,
-                                              songs_per_page)
+            scrape_popular_artists_for_letter.delay(
+                current_letter,
+                artists_per_letter,
+                pages_per_artist,
+                songs_per_page
+            )
         else:
-            scrape_all_artists_for_letter(current_letter,
-                                          artists_per_letter,
-                                          pages_per_artist,
-                                          songs_per_page)
+            scrape_all_artists_for_letter(
+                current_letter,
+                artists_per_letter,
+                pages_per_artist,
+                songs_per_page
+            )
 
 
+@app.task
 def scrape_popular_artists_for_letter(letter,
                                       artists_per_letter=None,
                                       pages_per_artist=None,
@@ -68,11 +73,12 @@ def scrape_popular_artists_for_letter(letter,
         if artists_per_letter and i >= artists_per_letter:
             break
 
-        scrape_all_songs_for_artist(artist,
-                                    pages_per_artist,
-                                    songs_per_page)
+        scrape_songs_of_artist.delay(artist,
+                                     pages_per_artist,
+                                     songs_per_page)
 
 
+@app.task
 def scrape_all_artists_for_letter(letter,
                                   artists_per_letter=None,
                                   pages_per_artist=None,
@@ -83,6 +89,7 @@ def scrape_all_artists_for_letter(letter,
     # the additional artists for page n.
     headers = {'x-requested-with': 'XMLHttpRequest'}
 
+    i = 0
     current_page = 1
     while current_page:
         url = url_template % (letter, current_page)
@@ -93,7 +100,14 @@ def scrape_all_artists_for_letter(letter,
         list_items = soup.find_all('li')
         artists = [li.a.text for li in list_items]
 
-        yield artists
+        for artist in artists:
+            if artists_per_letter and i >= artists_per_letter:
+                break
+
+            scrape_songs_of_artist.delay(artist,
+                                         pages_per_artist,
+                                         songs_per_page)
+            i += 1
 
         next_page = int(soup.div.find('a', {'rel': 'next'}).text)
         current_page = next_page
@@ -112,9 +126,10 @@ def _get_artist_id_from_name(artist_name):
     return artist_id
 
 
-def scrape_all_songs_for_artist(artist_name,
-                                pages_per_artist,
-                                songs_per_page):
+@app.task
+def scrape_songs_of_artist(artist_name,
+                           pages_per_artist,
+                           songs_per_page):
     """Get all songs from the given artist."""
     artist_id = _get_artist_id_from_name(artist_name)
 
@@ -143,8 +158,8 @@ def scrape_all_songs_for_artist(artist_name,
         current_page = next_page
 
 
-@app.task(bind=True, default_retry_delay=3)
-def scrape_song(self, song):
+@app.task
+def scrape_song(song):
     """Scrape a single song."""
     artist = song['primary_artist']['name']
     title = song['title']
@@ -190,32 +205,3 @@ def scrape_lyrics(artist, title):
         return
 
     return lyrics
-
-
-def print_usage():
-    print("Usage: python run.py [all | popular]")
-
-
-if __name__ == '__main__':
-    args = sys.argv[1:]
-    if len(args) != 1:
-        print_usage()
-        sys.exit(1)
-
-    popular_only_flag = args[0]
-    if popular_only_flag == 'validate':
-        scrape_songs(popular_only=True,
-                     letters=list('abc'),
-                     artists_per_letter=3,
-                     pages_per_artist=1,
-                     songs_per_page=3)
-        sys.exit(0)
-    elif popular_only_flag == 'popular':
-        popular_only = True
-    elif popular_only_flag == 'all':
-        popular_only = False
-    else:
-        print_usage()
-        sys.exit(1)
-
-    scrape_songs(popular_only=popular_only)

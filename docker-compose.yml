@@ -1,5 +1,13 @@
 version: '2'
 services:
+  # Genius Lyrics Crawler services
+  driver:
+    build: .
+    links:
+      - rabbitmq
+    depends_on:
+      - rabbitmq
+    command: python -u driver.py popular
   worker:
     build: .
     links:
@@ -8,19 +16,17 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+    command: celery -A genius_crawler worker
 
+  # 3rd party services
   rabbitmq:
     image: rabbitmq:latest
     environment:
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=pass
+      - RABBITMQ_DEFAULT_USER=gavin
+      - RABBITMQ_DEFAULT_PASS=hooli
     ports:
       - 5672:5672
   mongodb:
     image: mongo:latest
-    environment:
-      - MONGO_DATA_DIR=/data/mongodb
-    volumes:
-      - ./data/mongodb:/data/mongodb
     ports:
       - 27017:27017
