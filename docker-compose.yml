@@ -1,13 +1,38 @@
 version: '2'
 services:
-  crawler:
+  # Genius Lyrics Crawler services
+  driver:
     build: .
-  database:
-    hostname: mongo
-    image: mongo:latest
     environment:
-      - MONGO_DATA_DIR=/data/mongodb
-    volumes:
-      - ./data/mongodb:/data/mongodb
+      - RABBITMQ_USER=gavin
+      - RABBITMQ_PASS=hooli
+    links:
+      - rabbitmq
+    depends_on:
+      - rabbitmq
+    command: python -u driver.py popular
+  worker:
+    build: .
+    environment:
+      - RABBITMQ_USER=gavin
+      - RABBITMQ_PASS=hooli
+    links:
+      - rabbitmq
+      - mongodb
+    depends_on:
+      - rabbitmq
+      - mongodb
+    command: celery -A genius_crawler worker
+
+  # 3rd party services
+  rabbitmq:
+    image: rabbitmq:latest
+    environment:
+      - RABBITMQ_DEFAULT_USER=gavin
+      - RABBITMQ_DEFAULT_PASS=hooli
+    ports:
+      - 5672:5672
+  mongodb:
+    image: mongo:latest
     ports:
       - 27017:27017
