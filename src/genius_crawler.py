@@ -6,7 +6,6 @@ from bs4 import BeautifulSoup
 from celery import Celery
 import langdetect
 from langdetect.lang_detect_exception import LangDetectException
-from pymongo import MongoClient
 import requests
 
 from mongo_lyrics_repository import MongoLyricsRepository
