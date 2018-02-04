@@ -9,6 +9,7 @@ from langdetect.lang_detect_exception import LangDetectException
 from pymongo import MongoClient
 import requests
 
+from mongo_lyrics_repository import MongoLyricsRepository
 from url_builder import build_genius_url
 from url_builder import parse_raw_string
 
@@ -24,10 +25,8 @@ assert broker_pass and broker_pass, "Both 'RABBITMQ_USER' and " + \
 app = Celery('genius_lyrics_crawler',
              broker='amqp://gavin:hooli@rabbitmq:5672')
 
-# Setup MongoDB connection.
-client = MongoClient('mongodb', 27017)
-db = client.mole
-repo = db.lyrics
+# Setup repository to store lyrics in MongoDB.
+repo = MongoLyricsRepository('mongodb', 27017)
 
 
 def scrape_songs(popular_only=False,
