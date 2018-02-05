@@ -38,7 +38,7 @@ def scrape_songs(popular_only=False,
                  pages_per_artist=None,
                  songs_per_page=None):
     """Scrape songs from Genius for all letters."""
-    print("Start scraping process...")
+    logger.info("Start scraping process...")
 
     letters = letters or ascii_lowercase
     for current_letter in letters:
@@ -144,8 +144,8 @@ def scrape_songs_of_artist(artist_name,
 
     current_page = 1
     while current_page:
-        print("Scraping page %d for artist '%s'..."
-              % (current_page, artist_name))
+        logger.info("Scraping page %d for artist '%s'..."
+                    % (current_page, artist_name))
         url = url_template % (artist_id, current_page)
 
         r = requests.get(url)
@@ -172,6 +172,8 @@ def scrape_song(song):
     title = song['title']
     text = scrape_lyrics(artist, title)
     if not text:
+        logger.warning("'%s - %s' was skipped due to an empty text (before " +
+                       "removal of structural info)")
         return
 
     # Remove structural info like [Chorus].
@@ -179,13 +181,14 @@ def scrape_song(song):
                       if not line.startswith('[')])
     # Skip instrumentals that only contain [Instrumental].
     if not text:
-        return
+        logger.warning("'%s - %s' was skipped due to an empty text (after " +
+                       "removal of structural info)")
 
     try:
         language = langdetect.detect(text)
-    except LangDetectException as lde:
-        print("Language could not be detected for '%s - %s':\n%s"
-              % (artist, title, lde))
+    except LangDetectException:
+        logger.error("Language could not be detected for '%s - %s'"
+                     % (artist, title), exc_info=True)
         return
 
     song_obj = Song(artist, title, text, language)
@@ -200,15 +203,15 @@ def scrape_lyrics(artist, title):
     soup = BeautifulSoup(content, 'html5lib')
 
     if soup.find('div', class_='render_404'):
-        print("No lyrics found for '%s - %s' on Genius (%s)"
-              % (artist, title, url))
+        logger.warning("No lyrics found for '%s - %s' on Genius (%s)"
+                       % (artist, title, url))
         return
 
     try:
         lyrics = soup.find('div', class_='lyrics').get_text().strip()
-    except Exception as e:
-        print("Error while scraping '%s - %s':\n%s"
-              % (artist, title, e))
+    except Exception:
+        logger.error("Error while scraping '%s - %s'"
+                     % (artist, title), exc_info=True)
         return
 
     return lyrics
