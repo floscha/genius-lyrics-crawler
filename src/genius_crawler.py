@@ -11,10 +11,14 @@ import requests
 from persistence.mongo_lyrics_repository import MongoLyricsRepository
 from url_builder import build_genius_url
 from url_builder import parse_raw_string
+from util.fluentd_logger import get_logger
 
 
 # Define Song data type.
 Song = namedtuple('Song', ['artist', 'title', 'text', 'language'])
+
+# Get Fluentd logger instance.
+logger = get_logger(__name__, fluentd_host='fluentd')
 
 # Setup Celery with RabbitMQ as the broker.
 broker_user = os.getenv('RABBITMQ_USER')

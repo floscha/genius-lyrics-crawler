@@ -1,5 +1,6 @@
 beautifulsoup4
 celery
+fluent-logger
 html5lib
 langdetect
 pymongo
