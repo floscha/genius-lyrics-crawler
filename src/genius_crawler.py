@@ -8,7 +8,7 @@ import langdetect
 from langdetect.lang_detect_exception import LangDetectException
 import requests
 
-from mongo_lyrics_repository import MongoLyricsRepository
+from persistence.mongo_lyrics_repository import MongoLyricsRepository
 from url_builder import build_genius_url
 from url_builder import parse_raw_string
 
