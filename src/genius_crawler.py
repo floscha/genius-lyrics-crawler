@@ -109,7 +109,7 @@ def scrape_all_artists_for_letter(letter,
 
         for artist in artists:
             if artists_per_letter and i >= artists_per_letter:
-                break
+                return
 
             scrape_songs_of_artist.delay(artist,
                                          pages_per_artist,
