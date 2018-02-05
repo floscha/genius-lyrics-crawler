@@ -155,7 +155,7 @@ def scrape_songs_of_artist(artist_name,
 
         for i, song in enumerate(songs):
             if songs_per_page and i >= songs_per_page:
-                break
+                return
 
             scrape_song.delay(song)
 
