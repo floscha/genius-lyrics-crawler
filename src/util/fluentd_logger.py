@@ -32,7 +32,7 @@ def get_logger(name, fluentd_host='localhost', fluentd_port=24224):
         port=fluentd_port,
         buffer_overflow_handler=overflow_handler
     )
-    formatter = fluent_handler.FluentRecordFormatter(
+    formatter = handler.FluentRecordFormatter(
         custom_format,
         format_json=False
     )
