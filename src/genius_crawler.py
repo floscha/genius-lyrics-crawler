@@ -172,8 +172,8 @@ def scrape_song(song):
     title = song['title']
     text = scrape_lyrics(artist, title)
     if not text:
-        logger.warning("'%s - %s' was skipped due to an empty text (before " +
-                       "removal of structural info)")
+        logger.warning(("'%s - %s' was skipped due to an empty text (before" +
+                        " removal of structural info)") % (artist, title))
         return
 
     # Remove structural info like [Chorus].
@@ -181,8 +181,8 @@ def scrape_song(song):
                       if not line.startswith('[')])
     # Skip instrumentals that only contain [Instrumental].
     if not text:
-        logger.warning("'%s - %s' was skipped due to an empty text (after " +
-                       "removal of structural info)")
+        logger.warning(("'%s - %s' was skipped due to an empty text (after" +
+                       " removal of structural info)") % (artist, title))
 
     try:
         language = langdetect.detect(text)
