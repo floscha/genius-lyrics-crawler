@@ -3,6 +3,12 @@ import hashlib
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 
+from util.fluentd_logger import get_logger
+
+
+# Get Fluentd logger instance.
+logger = get_logger(__name__, fluentd_host='fluentd')
+
 
 class MongoLyricsRepository(object):
     """A MongoDB-based repository to store song lyrics."""
@@ -34,7 +40,9 @@ class MongoLyricsRepository(object):
                 raise Exception("Error while storing raw lyrics: " +
                                 "Wrong inserted ID")
         except DuplicateKeyError:
-            print("A song with the given key already exist. Update...")
+            logger.warning(("The song '%s - %s' already exists in the " +
+                            "database and will be overwritten with the " +
+                            "newer version") % (song.artist, song.title))
             self._lyrics.replace_one({'_id': song_id}, mongo_document)
 
         return mongo_document
