@@ -26,6 +26,16 @@ class MongoLyricsRepository(object):
         bytes_ = string.encode('utf-8')
         generated_id = hashlib.sha256(bytes_).hexdigest()
         return generated_id
+    
+    def exists(self, artist, title):
+        """Check if an artist/title combination for a song already exists."""
+        # Use `find()` with limit instead of `findOne()` as explained in
+        # https://blog.serverdensity.com/checking-if-a-document-exists-mongodb
+        # -slow-findone-vs-find/.
+        result_cursor = self._lyrics.find({'artist': artist},
+                                          {'title': title}
+                                          ).limit(1)
+        return result_cursor.count() > 0
 
     def store_song(self, song):
         """Store a Song object in MongoDB."""

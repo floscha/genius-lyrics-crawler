@@ -14,6 +14,10 @@ from url_builder import parse_raw_string
 from util.fluentd_logger import get_logger
 
 
+# Check if songs already exist in the database before scraping them.
+CHECK_DUPLICATES = True
+
+
 # Define Song data type.
 Song = namedtuple('Song', ['artist', 'title', 'text', 'language'])
 
@@ -156,6 +160,15 @@ def scrape_songs_of_artist(artist_name,
         for i, song in enumerate(songs):
             if songs_per_page and i >= songs_per_page:
                 return
+
+            if CHECK_DUPLICATES:
+                artist = song['primary_artist']['name']
+                title = song['title']
+                if repo.exists(artist, title):
+                    logger.info(("The song '%s - %s' already exists in the " +
+                                 "database and will therefore be skipped")
+                                % (artist, title))
+                    continue
 
             scrape_song.delay(song)
 
