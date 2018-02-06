@@ -11,9 +11,10 @@ logging.basicConfig(level=logging.INFO)
 
 # Define additional fields for Fluentd log entries.
 custom_format = {
-  'where': '%(module)s.%(funcName)s',
-  'type': '%(levelname)s',
-  'stack_trace': '%(exc_text)s'
+    'host': '%(hostname)s',
+    'where': '%(module)s.%(funcName)s',
+    'type': '%(levelname)s',
+    'stack_trace': '%(exc_text)s'
 }
 
 
