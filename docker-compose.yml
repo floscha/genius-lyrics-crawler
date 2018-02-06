@@ -10,7 +10,10 @@ services:
       - rabbitmq
     depends_on:
       - rabbitmq
-    command: python -u driver.py popular
+    entrypoint: python driver.py
+    # Comment out the `command` parameter if you want to run the driver as
+    # part of the `docker-compose up` command.
+    # command: popular
   worker:
     build: .
     environment:
