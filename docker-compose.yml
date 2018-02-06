@@ -36,3 +36,12 @@ services:
     image: mongo:latest
     ports:
       - 27017:27017
+  fluentd:
+    build: fluentd
+    ports:
+      - 24224:24224
+      - 24224:24224/udp
+    links:
+      - mongodb
+    depends_on:
+      - mongodb

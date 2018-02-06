@@ -8,13 +8,17 @@ import langdetect
 from langdetect.lang_detect_exception import LangDetectException
 import requests
 
-from mongo_lyrics_repository import MongoLyricsRepository
+from persistence.mongo_lyrics_repository import MongoLyricsRepository
 from url_builder import build_genius_url
 from url_builder import parse_raw_string
+from util.fluentd_logger import get_logger
 
 
 # Define Song data type.
 Song = namedtuple('Song', ['artist', 'title', 'text', 'language'])
+
+# Get Fluentd logger instance.
+logger = get_logger(__name__, fluentd_host='fluentd')
 
 # Setup Celery with RabbitMQ as the broker.
 broker_user = os.getenv('RABBITMQ_USER')
@@ -34,7 +38,7 @@ def scrape_songs(popular_only=False,
                  pages_per_artist=None,
                  songs_per_page=None):
     """Scrape songs from Genius for all letters."""
-    print("Start scraping process...")
+    logger.info("Start scraping process...")
 
     letters = letters or ascii_lowercase
     for current_letter in letters:
@@ -105,7 +109,7 @@ def scrape_all_artists_for_letter(letter,
 
         for artist in artists:
             if artists_per_letter and i >= artists_per_letter:
-                break
+                return
 
             scrape_songs_of_artist.delay(artist,
                                          pages_per_artist,
@@ -140,8 +144,8 @@ def scrape_songs_of_artist(artist_name,
 
     current_page = 1
     while current_page:
-        print("Scraping page %d for artist '%s'..."
-              % (current_page, artist_name))
+        logger.info("Scraping page %d for artist '%s'..."
+                    % (current_page, artist_name))
         url = url_template % (artist_id, current_page)
 
         r = requests.get(url)
@@ -151,7 +155,7 @@ def scrape_songs_of_artist(artist_name,
 
         for i, song in enumerate(songs):
             if songs_per_page and i >= songs_per_page:
-                break
+                return
 
             scrape_song.delay(song)
 
@@ -168,6 +172,8 @@ def scrape_song(song):
     title = song['title']
     text = scrape_lyrics(artist, title)
     if not text:
+        logger.warning(("'%s - %s' was skipped due to an empty text (before" +
+                        " removal of structural info)") % (artist, title))
         return
 
     # Remove structural info like [Chorus].
@@ -175,18 +181,19 @@ def scrape_song(song):
                       if not line.startswith('[')])
     # Skip instrumentals that only contain [Instrumental].
     if not text:
-        return
+        logger.warning(("'%s - %s' was skipped due to an empty text (after" +
+                       " removal of structural info)") % (artist, title))
 
     try:
         language = langdetect.detect(text)
-    except LangDetectException as lde:
-        print("Language could not be detected for '%s - %s':\n%s"
-              % (artist, title, lde))
+    except LangDetectException:
+        logger.error("Language could not be detected for '%s - %s'"
+                     % (artist, title), exc_info=True)
         return
 
     song_obj = Song(artist, title, text, language)
 
-    repo.store_song(song_obj._asdict())
+    repo.store_song(song_obj)
 
 
 def scrape_lyrics(artist, title):
@@ -196,15 +203,15 @@ def scrape_lyrics(artist, title):
     soup = BeautifulSoup(content, 'html5lib')
 
     if soup.find('div', class_='render_404'):
-        print("No lyrics found for '%s - %s' on Genius (%s)"
-              % (artist, title, url))
+        logger.warning("No lyrics found for '%s - %s' on Genius (%s)"
+                       % (artist, title, url))
         return
 
     try:
         lyrics = soup.find('div', class_='lyrics').get_text().strip()
-    except Exception as e:
-        print("Error while scraping '%s - %s':\n%s"
-              % (artist, title, e))
+    except Exception:
+        logger.error("Error while scraping '%s - %s'"
+                     % (artist, title), exc_info=True)
         return
 
     return lyrics
