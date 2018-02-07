@@ -1,32 +1,34 @@
-import sys
+import argparse
 
 from genius_crawler import scrape_songs
 
 
-def print_usage():
-    print("Usage: python driver.py [all | popular | validate]")
+def cli():
+    # Read and parse command line arguments.
+    parser = argparse.ArgumentParser()
+    parser.add_argument('target', choices=['all', 'popular'],
+                        help='defines wether all song or only popular ' +
+                        'songs should be scraped')
+    # Take letters of type `list` so that 'abc' becomes ['a', 'b', 'c'].
+    parser.add_argument('-l', '--letters', type=list,
+                        help='only scrape songs from artists beginning ' +
+                        'with one of the specified letters')
+    parser.add_argument('-apl', '--artists_per_letter', type=int,
+                        help='number of artist per letter to scrape')
+    parser.add_argument('-ppa', '--pages_per_artist', type=int,
+                        help='number of pages per per to scrape')
+    parser.add_argument('-spp', '--songs_per_page', type=int,
+                        help='number of songs per page to scrape')
+    args = parser.parse_args()
+
+    # Call crawler based on target.
+    if args.target in ['all', 'popular']:
+        scrape_songs(popular_only=args.target == 'popular',
+                     letters=args.letters,
+                     artists_per_letter=args.artists_per_letter,
+                     pages_per_artist=args.pages_per_artist,
+                     songs_per_page=args.songs_per_page)
 
 
 if __name__ == '__main__':
-    args = sys.argv[1:]
-    if len(args) != 1:
-        print_usage()
-        sys.exit(1)
-
-    popular_only_flag = args[0]
-    if popular_only_flag == 'validate':
-        scrape_songs(popular_only=True,
-                     letters=list('abc'),
-                     artists_per_letter=3,
-                     pages_per_artist=1,
-                     songs_per_page=3)
-        sys.exit(0)
-    elif popular_only_flag == 'popular':
-        popular_only = True
-    elif popular_only_flag == 'all':
-        popular_only = False
-    else:
-        print_usage()
-        sys.exit(1)
-
-    scrape_songs(popular_only=popular_only)
+    cli()
