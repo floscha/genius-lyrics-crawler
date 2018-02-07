@@ -161,9 +161,11 @@ def scrape_songs_of_artist(artist_name,
             if songs_per_page and i >= songs_per_page:
                 return
 
+            # Extract relevant fields from JSON object.
+            artist = song['primary_artist']['name']
+            title = song['title']
+
             if CHECK_DUPLICATES:
-                artist = song['primary_artist']['name']
-                title = song['title']
                 if repo.exists(artist, title):
                     logger.info(("The song '%s - %s' already exists in the " +
                                  "database and will therefore be skipped")
@@ -179,10 +181,8 @@ def scrape_songs_of_artist(artist_name,
 
 
 @app.task
-def scrape_song(song):
+def scrape_song(artist, title):
     """Scrape a single song."""
-    artist = song['primary_artist']['name']
-    title = song['title']
     text = scrape_lyrics(artist, title)
     if not text:
         logger.warning(("'%s - %s' was skipped due to an empty text (before" +
