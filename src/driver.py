@@ -1,14 +1,15 @@
 import argparse
 
+from genius_crawler import scrape_song
 from genius_crawler import scrape_songs
 
 
 def cli():
     # Read and parse command line arguments.
     parser = argparse.ArgumentParser()
-    parser.add_argument('target', choices=['all', 'popular'],
-                        help='defines wether all song or only popular ' +
-                        'songs should be scraped')
+    parser.add_argument('target', choices=['all', 'popular', 'song'],
+                        help='defines wether all song, only popular ' +
+                        'songs, or a single song should be scraped')
     # Take letters of type `list` so that 'abc' becomes ['a', 'b', 'c'].
     parser.add_argument('-l', '--letters', type=list,
                         help='only scrape songs from artists beginning ' +
@@ -19,6 +20,10 @@ def cli():
                         help='number of pages per per to scrape')
     parser.add_argument('-spp', '--songs_per_page', type=int,
                         help='number of songs per page to scrape')
+    parser.add_argument('-a', '--artist',
+                        help='the name of the artist to scrape')
+    parser.add_argument('-t', '--title',
+                        help='the title of the song to scrape')
     args = parser.parse_args()
 
     # Call crawler based on target.
@@ -28,6 +33,12 @@ def cli():
                      artists_per_letter=args.artists_per_letter,
                      pages_per_artist=args.pages_per_artist,
                      songs_per_page=args.songs_per_page)
+    elif args.target == 'song':
+        if args.artist and args.title:
+            scrape_song.delay(args.artist, args.title)
+        else:
+            raise ValueError("Both --artist and --title parameters have to " +
+                             "be set when using 'song' as target")
 
 
 if __name__ == '__main__':
