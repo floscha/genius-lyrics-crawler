@@ -9,9 +9,9 @@ from langdetect.lang_detect_exception import LangDetectException
 import requests
 
 from persistence.mongo_lyrics_repository import MongoLyricsRepository
-from url_builder import build_genius_url
-from url_builder import parse_raw_string
 from util.fluentd_logger import get_logger
+from util.url_builder import build_genius_url
+from util.url_builder import parse_raw_string
 
 
 # Check if songs already exist in the database before scraping them.
