@@ -1,6 +1,6 @@
 # Genius Lyrics Crawler
 
-![alt text](./temporary_logo.png)
+![temporary logo image](./temporary_logo.png)
 
 A concurrent crawler to retrieve song lyrics from [Genius](http://genius.com) and store them in a MongoDB database.
 
