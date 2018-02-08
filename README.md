@@ -2,7 +2,7 @@
 
 ![alt text](./temporary_logo.png)
 
-A simple crawler to store lyrics from [Genius](http://genius.com) in MongoDB.
+A concurrent crawler to retrieve song lyrics from [Genius](http://genius.com) and store them in a MongoDB database.
 
 ## Features
 - [x] Scrape all songs
