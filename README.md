@@ -11,6 +11,10 @@ A concurrent crawler to retrieve song lyrics from [Genius](http://genius.com) an
 - [x] Concurrent crawling
 - [x] Use multiple crawler instances
 
+## Architecture
+
+![crawler architecture iamge](./crawler_architecture.png)
+
 ## Usage
 Using the provided [Docker Compose configuration](docker-compose.yml), the crawler can be run by using only two simple steps.
 
