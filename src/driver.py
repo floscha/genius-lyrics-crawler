@@ -7,7 +7,8 @@ from genius_crawler import scrape_songs_of_artist
 
 def cli():
     # Read and parse command line arguments.
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Driver program to ' +
+                                     'initiate the scraping process')
     target_choices = ['all', 'popular', 'artist', 'song']
     parser.add_argument('target', choices=target_choices,
                         help='defines wether all song, only popular ' +
