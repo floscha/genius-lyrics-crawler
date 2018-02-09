@@ -16,8 +16,8 @@ A concurrent crawler to retrieve song lyrics from [Genius](http://genius.com) an
 ![crawler architecture iamge](./crawler_architecture.png)
 
 From a high-level perspective, the crawler consists of the following services:
-- **Driver:** Used to initiate the crawling process.
-- **Genius Lyrics Spider:** Scrapes song lyrics from Genius and stores them in MongoDB.
+- **Lyrics Crawler Driver:** Used to initiate the crawling process.
+- **Genius Crawler Spider:** Scrapes song lyrics from Genius and stores them in MongoDB.
 - **Celery:** Keeps concurrent scraping tasks in a message queue with RabbitMQ as the broker.
 - **Fluentd:** Aggregates logs and sends them to MongoDB in batches to avoid lock contention.
 - **MongoDB:** Used to store both lyrics and logs.
