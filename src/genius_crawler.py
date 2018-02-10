@@ -1,9 +1,7 @@
 from collections import namedtuple
-import os
 from string import ascii_lowercase
 
 from bs4 import BeautifulSoup
-from celery import Celery
 import langdetect
 from langdetect.lang_detect_exception import LangDetectException
 import requests
@@ -12,6 +10,7 @@ from persistence.mongo_lyrics_repository import MongoLyricsRepository
 from util.fluentd_logger import get_logger
 from util.url_builder import build_genius_url
 from util.url_builder import parse_raw_string
+from worker.celery_worker import worker as celery_worker
 
 
 # Check if songs already exist in the database before scraping them.
@@ -24,13 +23,8 @@ Song = namedtuple('Song', ['artist', 'title', 'text', 'language'])
 # Get Fluentd logger instance.
 logger = get_logger(__name__, fluentd_host='fluentd')
 
-# Setup Celery with RabbitMQ as the broker.
-broker_user = os.getenv('RABBITMQ_USER')
-broker_pass = os.getenv('RABBITMQ_PASS')
-assert broker_pass and broker_pass, "Both 'RABBITMQ_USER' and " + \
-                                    "'RABBITMQ_PASS' have to be set in ENV"
-app = Celery('genius_lyrics_crawler',
-             broker='amqp://gavin:hooli@rabbitmq:5672')
+# Set worker to Celery.
+worker = celery_worker
 
 # Setup repository to store lyrics in MongoDB.
 repo = MongoLyricsRepository('mongodb', 27017)
@@ -62,7 +56,7 @@ def scrape_songs(popular_only=False,
             )
 
 
-@app.task
+@worker.task
 def scrape_popular_artists_for_letter(letter,
                                       artists_per_letter=None,
                                       pages_per_artist=None,
@@ -89,7 +83,7 @@ def scrape_popular_artists_for_letter(letter,
                                      songs_per_page)
 
 
-@app.task
+@worker.task
 def scrape_all_artists_for_letter(letter,
                                   artists_per_letter=None,
                                   pages_per_artist=None,
@@ -137,7 +131,7 @@ def _get_artist_id_from_name(artist_name):
     return artist_id
 
 
-@app.task
+@worker.task
 def scrape_songs_of_artist(artist_name,
                            pages_per_artist,
                            songs_per_page):
@@ -180,7 +174,7 @@ def scrape_songs_of_artist(artist_name,
         current_page = next_page
 
 
-@app.task
+@worker.task
 def scrape_song(artist, title):
     """Scrape a single song."""
     text = scrape_lyrics(artist, title)
