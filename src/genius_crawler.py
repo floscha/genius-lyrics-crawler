@@ -166,7 +166,7 @@ def scrape_songs_of_artist(artist_name,
                                 % (artist, title))
                     continue
 
-            scrape_song.delay(song)
+            scrape_song.delay(artist, title)
 
         if pages_per_artist and current_page > pages_per_artist:
             break
