@@ -25,13 +25,3 @@ class SerialWorker(object):
     def task(self, fn):
         """Decorator to wrap a function in a `SerialTask` object."""
         return SerialTask(fn)
-
-
-if __name__ == '__main__':
-    worker = SerialWorker()
-    #
-    @worker.task
-    def testfn(string):
-        print(string)
-    #
-    testfn.delay("test working")
