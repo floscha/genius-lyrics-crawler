@@ -4,13 +4,6 @@
 
 A concurrent crawler to retrieve song lyrics from [Genius](http://genius.com) and store them in a MongoDB database.
 
-## Features
-- [x] Scrape all songs
-- [x] Scrape popular songs
-- [x] Simple CLI
-- [x] Concurrent crawling
-- [x] Use multiple crawler instances
-
 ## Architecture
 
 ![crawler architecture iamge](./crawler_architecture.png)
