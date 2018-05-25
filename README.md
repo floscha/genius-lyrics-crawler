@@ -1,6 +1,6 @@
-# Genius Lyrics Crawler
-
 ![temporary logo image](./temporary_logo.png)
+
+# Genius Lyrics Crawler
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/15f2b8a6814347b5a86480d06cdef08e)](https://www.codacy.com/app/floscha/genius-lyrics-crawler?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=floscha/genius-lyrics-crawler&amp;utm_campaign=Badge_Grade)
 
