@@ -23,6 +23,7 @@ class SerialWorker(object):
     except that all processing will happen in a serial/non-concurrent fashion.
     """
 
-    def task(self, fn):
+    @staticmethod
+    def task(fn):
         """Decorator to wrap a function in a `SerialTask` object."""
         return SerialTask(fn)
