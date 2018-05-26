@@ -26,7 +26,7 @@ class MongoLyricsRepository(object):
         bytes_ = string.encode('utf-8')
         generated_id = hashlib.sha256(bytes_).hexdigest()
         return generated_id
-    
+
     def exists(self, artist, title):
         """Check if an artist/title combination for a song already exists."""
         # Use `find()` with limit instead of `findOne()` as explained in
