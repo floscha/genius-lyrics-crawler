@@ -4,6 +4,7 @@ class SerialTask(object):
     Args:
         fn (class 'function'): The function object to later invoke.
     """
+
     def __init__(self, fn):
         self.fn = fn
 
